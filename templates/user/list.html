@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}用户管理 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}👥 用户管理{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <form method="GET" class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="form-group">
+            <label>部门</label>
+            <select name="department_id" class="form-select">
+                <option value="">全部</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>角色</label>
+            <select name="role" class="form-select">
+                <option value="">全部</option>
+                <option value="admin" {% if role == 'admin' %}selected{% endif %}>系统管理员</option>
+                <option value="dept_admin" {% if role == 'dept_admin' %}selected{% endif %}>部门管理员</option>
+                <option value="employee" {% if role == 'employee' %}selected{% endif %}>普通员工</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <button type="submit" class="btn btn-primary">查询</button>
+        </div>
+    </form>
+    <a href="{{ url_for('user.new') }}" class="btn btn-primary">
+        ➕ 新增用户
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>真实姓名</th>
+                        <th>角色</th>
+                        <th>所属部门</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.real_name }}</td>
+                        <td>
+                            <span class="badge {{ get_role_badge_class(user.role) }}">
+                                {{ get_role_text(user.role) }}
+                            </span>
+                        </td>
+                        <td>{{ user.department.name if user.department else '-' }}</td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit', id=user.id) }}" class="btn btn-sm btn-warning">编辑</a>
+                            {% if user.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('user.delete', id=user.id) }}" 
+                                  class="d-inline" data-confirm="确定要删除该用户吗？">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <p>暂无用户数据</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

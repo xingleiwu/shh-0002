@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}资产详情 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📋 资产详情{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>基本信息</h5>
+                <div>
+                    {% if current_user.is_admin() and asset.status != 'scrapped' %}
+                    <a href="{{ url_for('assets.edit', id=asset.id) }}" class="btn btn-sm btn-warning">编辑</a>
+                    {% endif %}
+                    <a href="{{ url_for('assets.list') }}" class="btn btn-sm btn-secondary">返回列表</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">资产ID</div>
+                        <div class="detail-value">{{ asset.id }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">资产名称</div>
+                        <div class="detail-value">{{ asset.name }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">资产分类</div>
+                        <div class="detail-value">{{ asset.category.name if asset.category else '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">购入价格</div>
+                        <div class="detail-value">¥{{ "%.2f"|format(asset.purchase_price) }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">购入日期</div>
+                        <div class="detail-value">{{ asset.purchase_date.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">使用部门</div>
+                        <div class="detail-value">{{ asset.department.name if asset.department else '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">责任人</div>
+                        <div class="detail-value">{{ asset.responsible_person }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">当前状态</div>
+                        <div class="detail-value">
+                            <span class="badge {{ get_badge_class(asset.status) }}">
+                                {{ get_status_text(asset.status) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">创建时间</div>
+                        <div class="detail-value">{{ asset.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">更新时间</div>
+                        <div class="detail-value">{{ asset.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>领用/归还记录</h5>
+            </div>
+            <div class="card-body">
+                {% if borrow_records %}
+                <div class="timeline">
+                    {% for record in borrow_records %}
+                    <div class="timeline-item {% if record.status == 'returned' %}success{% elif record.status == 'rejected' %}danger{% elif record.status == 'in_use' %}success{% endif %}">
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                {{ record.applicant.real_name }}
+                                <span class="badge {% if record.status == 'pending' %}badge-warning{% elif record.status == 'rejected' %}badge-danger{% elif record.status == 'approved' %}badge-info{% elif record.status == 'in_use' %}badge-success{% else %}badge-secondary{% endif %}">
+                                    {{ borrow_status_map.get(record.status, record.status) }}
+                                </span>
+                            </div>
+                            <div class="timeline-time">申请时间：{{ record.apply_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                            {% if record.approver %}
+                            <div class="timeline-desc">
+                                审批人：{{ record.approver.real_name }}
+                                {% if record.approve_date %}
+                                | 审批时间：{{ record.approve_date.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                                {% if record.reject_reason %}
+                                | 驳回原因：{{ record.reject_reason }}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if record.receive_date %}
+                            <div class="timeline-desc">领用时间：{{ record.receive_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                            {% endif %}
+                            {% if record.return_confirm_date %}
+                            <div class="timeline-desc">归还时间：{{ record.return_confirm_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                            {% endif %}
+                            {% if record.remark %}
+                            <div class="timeline-desc">备注：{{ record.remark }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <p>暂无领用记录</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>快捷操作</h5>
+            </div>
+            <div class="card-body">
+                {% if asset.status == 'idle' %}
+                <a href="{{ url_for('borrow.apply', asset_id=asset.id) }}" class="btn btn-primary w-100 mb-2">申请领用</a>
+                {% endif %}
+                {% if current_user.is_admin() and asset.status != 'scrapped' %}
+                <a href="{{ url_for('scrap.new') }}" class="btn btn-danger w-100">报废登记</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

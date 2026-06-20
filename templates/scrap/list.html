@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}报废记录 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}🗑️ 报废管理{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div class="flex-grow-1"></div>
+    {% if current_user.is_admin() %}
+    <a href="{{ url_for('scrap.new') }}" class="btn btn-primary">
+        ➕ 报废登记
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if records %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>资产名称</th>
+                        <th>购入价格</th>
+                        <th>报废原因</th>
+                        <th>报废日期</th>
+                        <th>操作人</th>
+                        <th>登记时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.id }}</td>
+                        <td>{{ record.asset.name }}</td>
+                        <td>¥{{ "%.2f"|format(record.asset.purchase_price) }}</td>
+                        <td style="max-width: 300px;">{{ record.reason }}</td>
+                        <td>{{ record.scrap_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ record.operator.real_name }}</td>
+                        <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🗑️</div>
+            <p>暂无报废记录</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

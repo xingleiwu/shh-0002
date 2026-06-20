@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}编辑用户{% else %}新增用户{% endif %} - 企业资产管理系统{% endblock %}
+
+{% block page_title %}{% if is_edit %}✏️ 编辑用户{% else %}➕ 新增用户{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.username.label(class="form-label required") }}
+                        {{ form.username(class="form-control", placeholder="请输入用户名") }}
+                        {% for error in form.username.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.real_name.label(class="form-label required") }}
+                        {{ form.real_name(class="form-control", placeholder="请输入真实姓名") }}
+                        {% for error in form.real_name.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.password.label(class="form-label" if is_edit else "form-label required") }}
+                        {{ form.password(class="form-control", placeholder="请输入密码" + ("（留空则不修改）" if is_edit else "")) }}
+                        {% for error in form.password.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                        {% if is_edit %}
+                        <div class="form-text text-muted">留空则不修改密码</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.role.label(class="form-label required") }}
+                        {{ form.role(class="form-select") }}
+                        {% for error in form.role.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.department_id.label(class="form-label") }}
+                        {{ form.department_id(class="form-select") }}
+                        {% for error in form.department_id.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('user.list') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

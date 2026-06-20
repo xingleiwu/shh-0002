@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}资产列表 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}💻 资产管理{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <form method="GET" class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="form-group">
+            <label>搜索</label>
+            <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="资产名称/责任人">
+        </div>
+        <div class="form-group">
+            <label>分类</label>
+            <select name="category_id" class="form-select">
+                <option value="">全部</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>部门</label>
+            <select name="department_id" class="form-select">
+                <option value="">全部</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>状态</label>
+            <select name="status" class="form-select">
+                <option value="">全部</option>
+                <option value="idle" {% if status == 'idle' %}selected{% endif %}>闲置</option>
+                <option value="in_use" {% if status == 'in_use' %}selected{% endif %}>使用中</option>
+                <option value="maintenance" {% if status == 'maintenance' %}selected{% endif %}>维修中</option>
+                <option value="scrapped" {% if status == 'scrapped' %}selected{% endif %}>已报废</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">查询</button>
+                <button type="reset" class="btn btn-secondary btn-filter-reset">重置</button>
+            </div>
+        </div>
+    </form>
+    {% if current_user.is_admin() %}
+    <a href="{{ url_for('assets.new') }}" class="btn btn-primary">
+        ➕ 新增资产
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if assets %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>资产名称</th>
+                        <th>分类</th>
+                        <th>购入价格</th>
+                        <th>使用部门</th>
+                        <th>责任人</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td>{{ asset.id }}</td>
+                        <td>{{ asset.name }}</td>
+                        <td>{{ asset.category.name if asset.category else '-' }}</td>
+                        <td>¥{{ "%.2f"|format(asset.purchase_price) }}</td>
+                        <td>{{ asset.department.name if asset.department else '-' }}</td>
+                        <td>{{ asset.responsible_person }}</td>
+                        <td>
+                            <span class="badge {{ get_badge_class(asset.status) }}">
+                                {{ get_status_text(asset.status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('assets.detail', id=asset.id) }}" class="btn btn-sm btn-outline-primary">查看</a>
+                            {% if current_user.is_admin() and asset.status != 'scrapped' %}
+                            <a href="{{ url_for('assets.edit', id=asset.id) }}" class="btn btn-sm btn-warning">编辑</a>
+                            <form method="POST" action="{{ url_for('assets.delete', id=asset.id) }}" 
+                                  class="d-inline" data-confirm="确定要删除该资产吗？">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <p>暂无资产数据</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

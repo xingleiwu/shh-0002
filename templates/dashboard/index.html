@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}统计看板 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📊 统计看板{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">资产总数</div>
+        <div class="stat-value">{{ total_assets }}</div>
+        <div class="text-muted small mt-2">总价值 ¥{{ "%.2f"|format(total_value) }}</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-label">使用中</div>
+        <div class="stat-value">{{ in_use_count }}</div>
+        <div class="text-muted small mt-2">价值 ¥{{ "%.2f"|format(in_use_value) }}</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-label">闲置</div>
+        <div class="stat-value">{{ idle_count }}</div>
+        <div class="text-muted small mt-2">价值 ¥{{ "%.2f"|format(idle_value) }}</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-label">已报废</div>
+        <div class="stat-value">{{ scrapped_count }}</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <h5>按部门统计资产数量</h5>
+        <canvas id="deptChart" height="300"></canvas>
+    </div>
+    <div class="chart-card">
+        <h5>按分类统计资产数量</h5>
+        <canvas id="catChart" height="300"></canvas>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <h5>按部门统计资产价值（万元）</h5>
+        <canvas id="deptValueChart" height="300"></canvas>
+    </div>
+    <div class="chart-card">
+        <h5>按分类统计资产价值占比</h5>
+        <canvas id="catValueChart" height="300"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var deptColors = ['#1e3a5f', '#2d5a8f', '#3b82f6', '#60a5fa', '#93c5fd'];
+var catColors = ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'];
+
+var deptCtx = document.getElementById('deptChart').getContext('2d');
+new Chart(deptCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ dept_names|tojson }},
+        datasets: [{
+            label: '资产数量',
+            data: {{ dept_counts|tojson }},
+            backgroundColor: deptColors,
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+    }
+});
+
+var catCtx = document.getElementById('catChart').getContext('2d');
+new Chart(catCtx, {
+    type: 'pie',
+    data: {
+        labels: {{ cat_names|tojson }},
+        datasets: [{
+            data: {{ cat_counts|tojson }},
+            backgroundColor: catColors,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'right' } }
+    }
+});
+
+var deptValueCtx = document.getElementById('deptValueChart').getContext('2d');
+new Chart(deptValueCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ dept_names|tojson }},
+        datasets: [{
+            label: '资产价值（万元）',
+            data: {{ dept_values|tojson }}.map(function(v) { return (v / 10000).toFixed(2); }),
+            backgroundColor: deptColors,
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+    }
+});
+
+var catValueCtx = document.getElementById('catValueChart').getContext('2d');
+new Chart(catValueCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ cat_names|tojson }},
+        datasets: [{
+            data: {{ cat_values|tojson }},
+            backgroundColor: catColors,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'right' } }
+    }
+});
+</script>
+{% endblock %}

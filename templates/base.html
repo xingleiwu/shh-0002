@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}企业资产管理系统{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>📦 资产管理系统</h3>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('dashboard.index') }}" class="{% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                <span class="menu-icon">📊</span>统计看板
+            </a></li>
+            <li><a href="{{ url_for('assets.list') }}" class="{% if request.endpoint and request.endpoint.startswith('assets.') %}active{% endif %}">
+                <span class="menu-icon">💻</span>资产管理
+            </a></li>
+            <li><a href="{{ url_for('borrow.list') }}" class="{% if request.endpoint and request.endpoint.startswith('borrow.') %}active{% endif %}">
+                <span class="menu-icon">📋</span>申领管理
+            </a></li>
+            <li><a href="{{ url_for('scrap.list') }}" class="{% if request.endpoint and request.endpoint.startswith('scrap.') %}active{% endif %}">
+                <span class="menu-icon">🗑️</span>报废管理
+            </a></li>
+            <li><a href="{{ url_for('department.assets') }}" class="{% if request.endpoint and request.endpoint.startswith('department.') %}active{% endif %}">
+                <span class="menu-icon">🏢</span>部门资产
+            </a></li>
+            {% if current_user.is_admin() %}
+            <li><a href="{{ url_for('user.list') }}" class="{% if request.endpoint and request.endpoint.startswith('user.') %}active{% endif %}">
+                <span class="menu-icon">👥</span>用户管理
+            </a></li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <h4>{% block page_title %}首页{% endblock %}</h4>
+            <div class="user-info">
+                <span class="user-name">{{ current_user.real_name }}</span>
+                <span class="user-role">{{ role_texts.get(current_user.role, current_user.role) }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-primary">退出</a>
+            </div>
+        </div>
+
+        <div class="page-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-auto-dismiss" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

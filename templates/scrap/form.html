@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}报废登记 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📝 报废登记{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        {% if form.asset_id.choices %}
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.asset_id.label(class="form-label required") }}
+                {{ form.asset_id(class="form-select") }}
+                {% for error in form.asset_id.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+                <div class="form-text text-muted">仅显示未报废的资产</div>
+            </div>
+
+            <div class="form-group">
+                {{ form.scrap_date.label(class="form-label required") }}
+                {{ form.scrap_date(class="form-control", type="date") }}
+                {% for error in form.scrap_date.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.reason.label(class="form-label required") }}
+                {{ form.reason(class="form-control", rows=4, placeholder="请详细说明报废原因") }}
+                {% for error in form.reason.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>注意：</strong>报废登记后，资产状态将更新为"已报废"，且无法恢复。请确认资产无未完成的领用记录。
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-danger") }}
+                <a href="{{ url_for('scrap.list') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <p>没有可报废的资产</p>
+            <a href="{{ url_for('scrap.list') }}" class="btn btn-primary mt-3">返回列表</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

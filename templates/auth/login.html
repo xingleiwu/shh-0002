@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}登录 - 企业资产管理系统{% endblock %}
+
+{% block auth_content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <h2>📦 企业资产管理系统</h2>
+        <p class="text-center text-muted mb-4">请登录以继续</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.username.label(class="form-label required") }}
+                {{ form.username(class="form-control", placeholder="请输入用户名") }}
+                {% for error in form.username.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label(class="form-label required") }}
+                {{ form.password(class="form-control", placeholder="请输入密码") }}
+                {% for error in form.password.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            {{ form.submit(class="btn btn-primary w-100 py-2") }}
+        </form>
+
+        <div class="mt-4 p-3 bg-light rounded">
+            <p class="small mb-2"><strong>测试账号：</strong></p>
+            <p class="small mb-1">管理员：admin / admin123</p>
+            <p class="small mb-1">部门管理员：lisi / 123456</p>
+            <p class="small mb-0">普通员工：zhangsan / 123456</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

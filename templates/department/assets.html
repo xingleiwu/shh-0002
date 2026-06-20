@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}部门资产 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}🏢 部门资产{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-label">资产总数</div>
+        <div class="stat-value">{{ assets|length }}</div>
+        <div class="text-muted small mt-2">总价值 ¥{{ "%.2f"|format(total_value) }}</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-label">使用中</div>
+        <div class="stat-value">{{ in_use_count }}</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-label">闲置</div>
+        <div class="stat-value">{{ idle_count }}</div>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <form method="GET" class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="form-group">
+            <label>搜索</label>
+            <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="资产名称/责任人">
+        </div>
+        <div class="form-group">
+            <label>分类</label>
+            <select name="category_id" class="form-select">
+                <option value="">全部</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>状态</label>
+            <select name="status" class="form-select">
+                <option value="">全部</option>
+                <option value="idle" {% if status == 'idle' %}selected{% endif %}>闲置</option>
+                <option value="in_use" {% if status == 'in_use' %}selected{% endif %}>使用中</option>
+                <option value="maintenance" {% if status == 'maintenance' %}selected{% endif %}>维修中</option>
+                <option value="scrapped" {% if status == 'scrapped' %}selected{% endif %}>已报废</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">查询</button>
+                <button type="reset" class="btn btn-secondary btn-filter-reset">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if assets %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>资产名称</th>
+                        <th>分类</th>
+                        <th>购入价格</th>
+                        <th>责任人</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td>{{ asset.id }}</td>
+                        <td>{{ asset.name }}</td>
+                        <td>{{ asset.category.name if asset.category else '-' }}</td>
+                        <td>¥{{ "%.2f"|format(asset.purchase_price) }}</td>
+                        <td>{{ asset.responsible_person }}</td>
+                        <td>
+                            <span class="badge {{ get_badge_class(asset.status) }}">
+                                {{ get_status_text(asset.status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('assets.detail', id=asset.id) }}" class="btn btn-sm btn-outline-primary">查看</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <p>本部门暂无资产数据</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}发起领用申请 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📝 发起领用申请{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        {% if form.asset_id.choices %}
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.asset_id.label(class="form-label required") }}
+                {{ form.asset_id(class="form-select") }}
+                {% for error in form.asset_id.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+                <div class="form-text text-muted">仅显示状态为"闲置"的资产</div>
+            </div>
+
+            <div class="form-group">
+                {{ form.remark.label(class="form-label") }}
+                {{ form.remark(class="form-control", rows=3, placeholder="请输入备注说明（可选）") }}
+                {% for error in form.remark.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('borrow.list') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <p>当前没有可领用的闲置资产</p>
+            <a href="{{ url_for('borrow.list') }}" class="btn btn-primary mt-3">返回列表</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

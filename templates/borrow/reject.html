@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}驳回申请 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}❌ 驳回申请{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-warning mb-4">
+            <strong>申请信息：</strong><br>
+            申请人：{{ record.applicant.real_name }}<br>
+            资产：{{ record.asset.name }}<br>
+            申请日期：{{ record.apply_date.strftime('%Y-%m-%d') }}
+        </div>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.reject_reason.label(class="form-label required") }}
+                {{ form.reject_reason(class="form-control", rows=3, placeholder="请输入驳回原因") }}
+                {% for error in form.reject_reason.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-danger") }}
+                <a href="{{ url_for('borrow.list') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

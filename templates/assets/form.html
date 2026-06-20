@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}编辑资产{% else %}新增资产{% endif %} - 企业资产管理系统{% endblock %}
+
+{% block page_title %}{% if is_edit %}✏️ 编辑资产{% else %}➕ 新增资产{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.name.label(class="form-label required") }}
+                        {{ form.name(class="form-control", placeholder="请输入资产名称") }}
+                        {% for error in form.name.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.category_id.label(class="form-label required") }}
+                        {{ form.category_id(class="form-select") }}
+                        {% for error in form.category_id.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.purchase_price.label(class="form-label required") }}
+                        {{ form.purchase_price(class="form-control", placeholder="请输入购入价格", step="0.01") }}
+                        {% for error in form.purchase_price.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.purchase_date.label(class="form-label required") }}
+                        {{ form.purchase_date(class="form-control", type="date") }}
+                        {% for error in form.purchase_date.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.department_id.label(class="form-label required") }}
+                        {{ form.department_id(class="form-select") }}
+                        {% for error in form.department_id.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.responsible_person.label(class="form-label required") }}
+                        {{ form.responsible_person(class="form-control", placeholder="请输入责任人姓名") }}
+                        {% for error in form.responsible_person.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.status.label(class="form-label required") }}
+                        {{ form.status(class="form-select") }}
+                        {% for error in form.status.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('assets.list') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
