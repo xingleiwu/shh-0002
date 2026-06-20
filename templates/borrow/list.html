@@ -15,7 +15,8 @@
                 <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>已驳回</option>
                 <option value="approved" {% if status == 'approved' %}selected{% endif %}>待领用</option>
                 <option value="in_use" {% if status == 'in_use' %}selected{% endif %}>使用中</option>
-                <option value="returned" {% if status == 'returned' %}selected{% endif %}>已归还</option>
+                <option value="returned" {% if status == 'returned' %}selected{% endif %}>待收讫</option>
+                <option value="completed" {% if status == 'completed' %}selected{% endif %}>已完成</option>
             </select>
         </div>
         {% if current_user.is_dept_admin() %}

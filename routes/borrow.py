@@ -13,7 +13,8 @@ def get_badge_class(status):
         'rejected': 'badge-danger',
         'approved': 'badge-info',
         'in_use': 'badge-success',
-        'returned': 'badge-secondary'
+        'returned': 'badge-warning',
+        'completed': 'badge-secondary'
     }
     return classes.get(status, 'badge-secondary')
 
@@ -24,7 +25,8 @@ def get_status_text(status):
         'rejected': '已驳回',
         'approved': '待领用',
         'in_use': '使用中',
-        'returned': '已归还'
+        'returned': '待收讫',
+        'completed': '已完成'
     }
     return texts.get(status, status)
 
@@ -75,8 +77,22 @@ def apply(asset_id):
 
     if form.validate_on_submit():
         asset = Asset.query.get(form.asset_id.data)
-        if asset and asset.status != 'idle':
+        
+        if not asset:
+            flash('资产不存在！', 'danger')
+            return redirect(url_for('borrow.apply'))
+        
+        if asset.status != 'idle':
             flash('该资产当前不可领用！', 'danger')
+            return redirect(url_for('borrow.apply'))
+        
+        existing_active = BorrowRecord.query.filter(
+            BorrowRecord.asset_id == asset.id,
+            BorrowRecord.status.in_(['pending', 'approved', 'in_use'])
+        ).count()
+        
+        if existing_active > 0:
+            flash('该资产已有未完成的申领申请，请选择其他资产！', 'danger')
             return redirect(url_for('borrow.apply'))
 
         record = BorrowRecord(
@@ -103,6 +119,16 @@ def approve(id):
 
     if record.status != 'pending':
         flash('该申请状态不支持审批操作！', 'warning')
+        return redirect(url_for('borrow.list'))
+
+    other_approved = BorrowRecord.query.filter(
+        BorrowRecord.asset_id == record.asset_id,
+        BorrowRecord.status == 'approved',
+        BorrowRecord.id != record.id
+    ).count()
+    
+    if other_approved > 0:
+        flash('该资产已有其他申请已被批准，无法重复审批！', 'danger')
         return redirect(url_for('borrow.list'))
 
     record.status = 'approved'
@@ -189,8 +215,9 @@ def confirm_return(id):
         flash('该申请状态不支持确认归还操作！', 'warning')
         return redirect(url_for('borrow.list'))
 
+    record.status = 'completed'
     record.return_confirm_date = datetime.now()
     record.asset.status = 'idle'
     db.session.commit()
-    flash('资产已收讫，状态更新为闲置！', 'success')
+    flash('资产已收讫，申领记录已完成！', 'success')
     return redirect(url_for('borrow.list'))

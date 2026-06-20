@@ -123,8 +123,16 @@ def delete(id):
     asset = Asset.query.get_or_404(id)
 
     borrow_count = BorrowRecord.query.filter_by(asset_id=id).count()
+    
+    from models import ScrapRecord
+    scrap_count = ScrapRecord.query.filter_by(asset_id=id).count()
+    
     if borrow_count > 0:
         flash('该资产存在领用记录，无法删除！', 'danger')
+        return redirect(url_for('assets.list'))
+    
+    if scrap_count > 0:
+        flash('该资产存在报废记录，无法删除！', 'danger')
         return redirect(url_for('assets.list'))
 
     db.session.delete(asset)
@@ -144,7 +152,8 @@ def detail(id):
         'rejected': '已驳回',
         'approved': '待领用',
         'in_use': '使用中',
-        'returned': '已归还'
+        'returned': '待收讫',
+        'completed': '已完成'
     }
 
     return render_template('assets/detail.html',

@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
-from models import Department, Category, User
+from models import db, Department, Category, User
 
 
 class LoginForm(FlaskForm):
@@ -38,10 +38,21 @@ class BorrowApplyForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(BorrowApplyForm, self).__init__(*args, **kwargs)
-        from models import Asset
+        from models import Asset, BorrowRecord
+        from sqlalchemy import not_
+        
+        active_borrow_subq = db.session.query(BorrowRecord.asset_id).filter(
+            BorrowRecord.status.in_(['pending', 'approved', 'in_use'])
+        ).distinct()
+        
+        available_assets = Asset.query.filter(
+            Asset.status == 'idle',
+            not_(Asset.id.in_(active_borrow_subq))
+        ).order_by(Asset.name).all()
+        
         self.asset_id.choices = [
             (a.id, f'{a.name} ({a.department.name if a.department else "未分配"})')
-            for a in Asset.query.filter_by(status='idle').order_by(Asset.name).all()
+            for a in available_assets
         ]
 
 
