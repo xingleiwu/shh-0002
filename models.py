@@ -36,6 +36,10 @@ class User(UserMixin, db.Model):
     borrow_approvals = db.relationship('BorrowRecord', foreign_keys='BorrowRecord.approver_id',
                                        backref='approver', lazy=True)
     scrap_records = db.relationship('ScrapRecord', backref='operator', lazy=True)
+    repair_reports = db.relationship('RepairOrder', foreign_keys='RepairOrder.reporter_id',
+                                     backref='reporter', lazy=True)
+    repair_assignments = db.relationship('RepairOrder', foreign_keys='RepairOrder.assignee_id',
+                                         backref='assignee', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -48,6 +52,12 @@ class User(UserMixin, db.Model):
 
     def is_dept_admin(self):
         return self.role == 'dept_admin' or self.role == 'admin'
+
+    def is_maintainer(self):
+        return self.role == 'maintainer' or self.role == 'admin'
+
+    def is_repair_staff(self):
+        return self.role in ['admin', 'maintainer']
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -83,9 +93,64 @@ class Asset(db.Model):
 
     borrow_records = db.relationship('BorrowRecord', backref='asset', lazy=True)
     scrap_records = db.relationship('ScrapRecord', backref='asset', lazy=True)
+    repair_orders = db.relationship('RepairOrder', backref='asset', lazy=True)
 
     def __repr__(self):
         return f'<Asset {self.name}>'
+
+
+class RepairOrder(db.Model):
+    __tablename__ = 'repair_orders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    asset_id = db.Column(db.Integer, db.ForeignKey('assets.id'), nullable=False)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    fault_description = db.Column(db.Text, nullable=False)
+    fault_level = db.Column(db.String(20), nullable=False, default='normal')
+    status = db.Column(db.String(20), nullable=False, default='pending')
+    assignee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    assign_time = db.Column(db.DateTime, nullable=True)
+    repair_content = db.Column(db.Text, nullable=True)
+    repair_cost = db.Column(db.Numeric(10, 2), nullable=True)
+    repair_finish_time = db.Column(db.DateTime, nullable=True)
+    verify_remark = db.Column(db.Text, nullable=True)
+    verify_time = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    def get_timeline(self):
+        timeline = []
+        timeline.append({
+            'status': 'pending',
+            'title': '提交报修',
+            'time': self.created_at,
+            'desc': f'报修人：{self.reporter.real_name if self.reporter else "未知"}'
+        })
+        if self.assign_time and self.assignee:
+            timeline.append({
+                'status': 'assigned',
+                'title': '已派单',
+                'time': self.assign_time,
+                'desc': f'派给：{self.assignee.real_name}'
+            })
+        if self.repair_finish_time:
+            timeline.append({
+                'status': 'repairing',
+                'title': '维修完成',
+                'time': self.repair_finish_time,
+                'desc': self.repair_content or '无维修记录'
+            })
+        if self.verify_time:
+            timeline.append({
+                'status': 'verified',
+                'title': '验收通过',
+                'time': self.verify_time,
+                'desc': self.verify_remark or '无验收备注'
+            })
+        return timeline
+
+    def __repr__(self):
+        return f'<RepairOrder {self.id}>'
 
 
 class BorrowRecord(db.Model):

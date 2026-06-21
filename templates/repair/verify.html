@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}验收确认 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}✔️ 验收确认{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-info mb-4">
+            <strong>维修信息：</strong><br>
+            报修资产：{{ order.asset.name }}<br>
+            维修人员：{{ order.assignee.real_name }}<br>
+            维修内容：{{ order.repair_content[:50] }}{% if order.repair_content and order.repair_content|length > 50 %}...{% endif %}
+            {% if order.repair_cost is not none %}<br>维修费用：¥{{ "%.2f"|format(order.repair_cost) }}{% endif %}
+        </div>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.verify_remark.label(class="form-label") }}
+                {{ form.verify_remark(class="form-control", rows=3, placeholder="请输入验收备注（选填）") }}
+                {% for error in form.verify_remark.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('repair.detail', id=order.id) }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

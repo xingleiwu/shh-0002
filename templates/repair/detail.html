@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}维修详情 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}🔧 维修详情{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>基本信息</h5>
+                <div>
+                    <a href="{{ url_for('repair.list') }}" class="btn btn-sm btn-secondary">返回列表</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">报修单ID</div>
+                        <div class="detail-value">{{ order.id }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">当前状态</div>
+                        <div class="detail-value">
+                            <span class="badge {{ get_badge_class(order.status) }}">
+                                {{ get_status_text(order.status) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">故障等级</div>
+                        <div class="detail-value">
+                            <span class="badge {{ get_fault_level_badge(order.fault_level) }}">
+                                {{ get_fault_level_text(order.fault_level) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">报修资产</div>
+                        <div class="detail-value">{{ order.asset.name if order.asset else '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">报修人</div>
+                        <div class="detail-value">{{ order.reporter.real_name if order.reporter else '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">提交时间</div>
+                        <div class="detail-value">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">维修人员</div>
+                        <div class="detail-value">{{ order.assignee.real_name if order.assignee else '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">派单时间</div>
+                        <div class="detail-value">{{ order.assign_time.strftime('%Y-%m-%d %H:%M') if order.assign_time else '-' }}</div>
+                    </div>
+                    {% if order.repair_cost is not none %}
+                    <div class="detail-item">
+                        <div class="detail-label">维修费用</div>
+                        <div class="detail-value">¥{{ "%.2f"|format(order.repair_cost) }}</div>
+                    </div>
+                    {% endif %}
+                    {% if order.repair_finish_time %}
+                    <div class="detail-item">
+                        <div class="detail-label">维修完成时间</div>
+                        <div class="detail-value">{{ order.repair_finish_time.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    {% endif %}
+                    {% if order.verify_time %}
+                    <div class="detail-item">
+                        <div class="detail-label">验收时间</div>
+                        <div class="detail-value">{{ order.verify_time.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>故障描述</h5>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-wrap;">{{ order.fault_description }}</p>
+            </div>
+        </div>
+
+        {% if order.repair_content %}
+        <div class="card">
+            <div class="card-header">
+                <h5>维修记录</h5>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-wrap;">{{ order.repair_content }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if order.verify_remark %}
+        <div class="card">
+            <div class="card-header">
+                <h5>验收备注</h5>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-wrap;">{{ order.verify_remark }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h5>维修进度</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for item in order.get_timeline() %}
+                    <div class="timeline-item {% if item.status == 'verified' %}success{% elif item.status == 'repairing' %}primary{% elif item.status == 'assigned' %}info{% elif item.status == 'pending' %}warning{% endif %}">
+                        <div class="timeline-content">
+                            <div class="timeline-title">{{ item.title }}</div>
+                            <div class="timeline-time">{{ item.time.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <div class="timeline-desc">{{ item.desc }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>快捷操作</h5>
+            </div>
+            <div class="card-body">
+                {% if current_user.is_admin() and order.status == 'pending' %}
+                <a href="{{ url_for('repair.assign', id=order.id) }}" class="btn btn-warning w-100 mb-2">📋 派单</a>
+                {% endif %}
+
+                {% if (current_user.id == order.assignee_id or current_user.is_admin()) and order.status == 'assigned' %}
+                <form method="POST" action="{{ url_for('repair.start_repair', id=order.id) }}"
+                      data-confirm="确定开始维修吗？">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-info w-100 mb-2">🔧 开始维修</button>
+                </form>
+                {% endif %}
+
+                {% if (current_user.id == order.assignee_id or current_user.is_admin()) and order.status in ['assigned', 'repairing'] %}
+                <a href="{{ url_for('repair.finish_repair', id=order.id) }}" class="btn btn-success w-100 mb-2">✅ 完成维修</a>
+                {% endif %}
+
+                {% if current_user.is_admin() and order.status == 'completed' %}
+                <a href="{{ url_for('repair.verify', id=order.id) }}" class="btn btn-primary w-100 mb-2">✔️ 验收确认</a>
+                {% endif %}
+
+                {% if order.status == 'verified' %}
+                <div class="alert alert-success">
+                    维修已完成并验收通过
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

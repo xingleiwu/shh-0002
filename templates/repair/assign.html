@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}派单 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📋 派单{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-info mb-4">
+            <strong>报修信息：</strong><br>
+            报修资产：{{ order.asset.name }}<br>
+            报修人：{{ order.reporter.real_name }}<br>
+            故障等级：{{ order.fault_level }}
+        </div>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.assignee_id.label(class="form-label required") }}
+                {{ form.assignee_id(class="form-select") }}
+                {% for error in form.assignee_id.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-warning") }}
+                <a href="{{ url_for('repair.detail', id=order.id) }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

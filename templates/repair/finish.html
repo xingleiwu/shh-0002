@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}完成维修 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}✅ 完成维修{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-info mb-4">
+            <strong>报修信息：</strong><br>
+            报修资产：{{ order.asset.name }}<br>
+            报修人：{{ order.reporter.real_name }}<br>
+            故障描述：{{ order.fault_description[:50] }}{% if order.fault_description|length > 50 %}...{% endif %}
+        </div>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.repair_content.label(class="form-label required") }}
+                {{ form.repair_content(class="form-control", rows=5, placeholder="请详细描述维修内容、更换的配件等...") }}
+                {% for error in form.repair_content.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.repair_cost.label(class="form-label") }}
+                {{ form.repair_cost(class="form-control", placeholder="请输入维修费用（选填）") }}
+                {% for error in form.repair_cost.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-success") }}
+                <a href="{{ url_for('repair.detail', id=order.id) }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

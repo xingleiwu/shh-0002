@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}维修管理 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}🔧 维修管理{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <form method="GET" class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="form-group">
+            <label>状态</label>
+            <select name="status" class="form-select">
+                <option value="">全部</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>待派单</option>
+                <option value="assigned" {% if status == 'assigned' %}selected{% endif %}>已派单</option>
+                <option value="repairing" {% if status == 'repairing' %}selected{% endif %}>维修中</option>
+                <option value="completed" {% if status == 'completed' %}selected{% endif %}>待验收</option>
+                <option value="verified" {% if status == 'verified' %}selected{% endif %}>已完成</option>
+            </select>
+        </div>
+        {% if current_user.is_maintainer() and not current_user.is_admin() %}
+        <div class="form-group">
+            <label>范围</label>
+            <select name="my" class="form-select">
+                <option value="0" {% if my_repair == 0 %}selected{% endif %}>全部维修</option>
+                <option value="1" {% if my_repair == 1 %}selected{% endif %}>我的维修</option>
+            </select>
+        </div>
+        {% endif %}
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <button type="submit" class="btn btn-primary">查询</button>
+        </div>
+    </form>
+    <a href="{{ url_for('repair.submit') }}" class="btn btn-primary">
+        ➕ 提交报修
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>资产名称</th>
+                        <th>报修人</th>
+                        <th>故障等级</th>
+                        <th>提交时间</th>
+                        <th>维修人员</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.asset.name if order.asset else '<span class="text-muted">已删除</span>'|safe }}</td>
+                        <td>{{ order.reporter.real_name if order.reporter else '-' }}</td>
+                        <td>
+                            <span class="badge {{ get_fault_level_badge(order.fault_level) }}">
+                                {{ get_fault_level_text(order.fault_level) }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ order.assignee.real_name if order.assignee else '-' }}</td>
+                        <td>
+                            <span class="badge {{ get_badge_class(order.status) }}">
+                                {{ get_status_text(order.status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('repair.detail', id=order.id) }}" class="btn btn-sm btn-outline-primary">详情</a>
+
+                            {% if current_user.is_admin() and order.status == 'pending' %}
+                            <a href="{{ url_for('repair.assign', id=order.id) }}" class="btn btn-sm btn-warning">派单</a>
+                            {% endif %}
+
+                            {% if (current_user.id == order.assignee_id or current_user.is_admin()) and order.status == 'assigned' %}
+                            <form method="POST" action="{{ url_for('repair.start_repair', id=order.id) }}"
+                                  class="d-inline" data-confirm="确定开始维修吗？">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-info">开始维修</button>
+                            </form>
+                            {% endif %}
+
+                            {% if (current_user.id == order.assignee_id or current_user.is_admin()) and order.status in ['assigned', 'repairing'] %}
+                            <a href="{{ url_for('repair.finish_repair', id=order.id) }}" class="btn btn-sm btn-success">完成维修</a>
+                            {% endif %}
+
+                            {% if current_user.is_admin() and order.status == 'completed' %}
+                            <a href="{{ url_for('repair.verify', id=order.id) }}" class="btn btn-sm btn-primary">验收</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔧</div>
+            <p>暂无维修记录</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -27,6 +27,9 @@
             <li><a href="{{ url_for('scrap.list') }}" class="{% if request.endpoint and request.endpoint.startswith('scrap.') %}active{% endif %}">
                 <span class="menu-icon">🗑️</span>报废管理
             </a></li>
+            <li><a href="{{ url_for('repair.list') }}" class="{% if request.endpoint and request.endpoint.startswith('repair.') %}active{% endif %}">
+                <span class="menu-icon">🔧</span>维修管理
+            </a></li>
             <li><a href="{{ url_for('department.assets') }}" class="{% if request.endpoint and request.endpoint.startswith('department.') %}active{% endif %}">
                 <span class="menu-icon">🏢</span>部门资产
             </a></li>

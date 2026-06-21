@@ -83,6 +83,7 @@ class UserForm(FlaskForm):
     role = SelectField('角色', choices=[
         ('employee', '普通员工'),
         ('dept_admin', '部门管理员'),
+        ('maintainer', '维修人员'),
         ('admin', '系统管理员')
     ], validators=[DataRequired()])
     department_id = SelectField('所属部门', coerce=int, validators=[Optional()])
@@ -118,3 +119,49 @@ class InventoryItemForm(FlaskForm):
     actual_location = StringField('实际位置', validators=[Optional(), Length(max=100)])
     remark = StringField('备注', validators=[Optional(), Length(max=255)])
     submit = SubmitField('保存')
+
+
+class RepairSubmitForm(FlaskForm):
+    asset_id = SelectField('报修资产', coerce=int, validators=[DataRequired()])
+    fault_description = TextAreaField('故障描述', validators=[DataRequired(), Length(1, 500)])
+    fault_level = SelectField('故障等级', choices=[
+        ('normal', '一般'),
+        ('serious', '严重'),
+        ('urgent', '紧急')
+    ], validators=[DataRequired()])
+    submit = SubmitField('提交报修')
+
+    def __init__(self, *args, **kwargs):
+        super(RepairSubmitForm, self).__init__(*args, **kwargs)
+        from models import Asset
+        self.asset_id.choices = [
+            (a.id, f'{a.name} ({a.department.name if a.department else "未分配"})')
+            for a in Asset.query.filter(Asset.status != 'scrapped').order_by(Asset.name).all()
+        ]
+
+
+class RepairAssignForm(FlaskForm):
+    assignee_id = SelectField('指派维修人员', coerce=int, validators=[DataRequired()])
+    submit = SubmitField('确认派单')
+
+    def __init__(self, *args, **kwargs):
+        super(RepairAssignForm, self).__init__(*args, **kwargs)
+        from models import User
+        maintainers = User.query.filter(
+            User.role.in_(['maintainer', 'admin'])
+        ).order_by(User.real_name).all()
+        self.assignee_id.choices = [
+            (u.id, f'{u.real_name} ({u.role})') for u in maintainers
+        ]
+
+
+class RepairFinishForm(FlaskForm):
+    repair_content = TextAreaField('维修内容', validators=[DataRequired(), Length(1, 500)])
+    repair_cost = DecimalField('维修费用（元）', validators=[Optional(), NumberRange(min=0)],
+                               places=2, rounding=None)
+    submit = SubmitField('完成维修')
+
+
+class RepairVerifyForm(FlaskForm):
+    verify_remark = TextAreaField('验收备注', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('确认验收')

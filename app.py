@@ -36,6 +36,7 @@ def create_app():
     from routes.department import department_bp
     from routes.user import user_bp
     from routes.logs import logs_bp
+    from routes.repair import repair_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -46,6 +47,7 @@ def create_app():
     app.register_blueprint(department_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(logs_bp)
+    app.register_blueprint(repair_bp)
 
     from flask_wtf.csrf import generate_csrf
 
@@ -54,6 +56,7 @@ def create_app():
         role_texts = {
             'admin': '系统管理员',
             'dept_admin': '部门管理员',
+            'maintainer': '维修人员',
             'employee': '普通员工'
         }
         return {
@@ -116,6 +119,10 @@ def init_database():
         lisi = User(username='lisi', real_name='李四', role='dept_admin', department_id=market_dept.id)
         lisi.set_password('123456')
         db.session.add(lisi)
+
+        wangwu = User(username='wangwu', real_name='王五', role='maintainer', department_id=admin_dept.id)
+        wangwu.set_password('123456')
+        db.session.add(wangwu)
 
         db.session.commit()
 

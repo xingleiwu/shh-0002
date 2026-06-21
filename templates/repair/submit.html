@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}提交报修 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}🔧 提交报修{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>填写报修信息</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                <label class="form-label required">报修资产</label>
+                {{ form.asset_id(class="form-select") }}
+                {% if form.asset_id.errors %}
+                <div class="text-danger mt-1">
+                    {% for error in form.asset_id.errors %}
+                    <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">故障等级</label>
+                {{ form.fault_level(class="form-select") }}
+                {% if form.fault_level.errors %}
+                <div class="text-danger mt-1">
+                    {% for error in form.fault_level.errors %}
+                    <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">故障描述</label>
+                {{ form.fault_description(class="form-control", rows="5", placeholder="请详细描述故障现象...") }}
+                {% if form.fault_description.errors %}
+                <div class="text-danger mt-1">
+                    {% for error in form.fault_description.errors %}
+                    <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('repair.list') }}" class="btn btn-secondary">返回</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
