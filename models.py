@@ -120,3 +120,92 @@ class ScrapRecord(db.Model):
 
     def __repr__(self):
         return f'<ScrapRecord {self.id}>'
+
+
+class InventoryCheck(db.Model):
+    __tablename__ = 'inventory_checks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='draft')
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    remark = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    items = db.relationship('InventoryItem', backref='inventory', lazy=True, cascade='all, delete-orphan')
+    operator = db.relationship('User', backref='inventory_checks', lazy=True)
+    department = db.relationship('Department', backref='inventory_checks', lazy=True)
+
+    def get_statistics(self):
+        total = len(self.items)
+        normal = sum(1 for i in self.items if i.result == 'normal')
+        surplus = sum(1 for i in self.items if i.result == 'surplus')
+        loss = sum(1 for i in self.items if i.result == 'loss')
+        unchecked = sum(1 for i in self.items if i.result is None)
+        return {
+            'total': total,
+            'normal': normal,
+            'surplus': surplus,
+            'loss': loss,
+            'unchecked': unchecked
+        }
+
+    def __repr__(self):
+        return f'<InventoryCheck {self.title}>'
+
+
+class InventoryItem(db.Model):
+    __tablename__ = 'inventory_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    inventory_id = db.Column(db.Integer, db.ForeignKey('inventory_checks.id'), nullable=False)
+    asset_id = db.Column(db.Integer, db.ForeignKey('assets.id'), nullable=False)
+    expected_status = db.Column(db.String(20), nullable=False)
+    actual_status = db.Column(db.String(20), nullable=True)
+    result = db.Column(db.String(20), nullable=True)
+    actual_location = db.Column(db.String(100), nullable=True)
+    remark = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    asset = db.relationship('Asset', backref='inventory_items', lazy=True)
+
+    def update_result(self):
+        if self.actual_status is None:
+            self.result = None
+        elif self.expected_status == self.actual_status:
+            self.result = 'normal'
+        elif self.actual_status == 'exists':
+            self.result = 'normal'
+        else:
+            if self.expected_status in ['idle', 'in_use', 'maintenance'] and self.actual_status == 'missing':
+                self.result = 'loss'
+            elif self.expected_status == 'scrapped' and self.actual_status == 'exists':
+                self.result = 'surplus'
+            else:
+                self.result = 'normal'
+
+    def __repr__(self):
+        return f'<InventoryItem {self.id}>'
+
+
+class OperationLog(db.Model):
+    __tablename__ = 'operation_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    operation_type = db.Column(db.String(50), nullable=False)
+    target_id = db.Column(db.Integer, nullable=True)
+    target_type = db.Column(db.String(50), nullable=True)
+    target_name = db.Column(db.String(200), nullable=True)
+    content = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    operator = db.relationship('User', backref='operation_logs', lazy=True)
+
+    def __repr__(self):
+        return f'<OperationLog {self.id}: {self.operation_type}>'

@@ -351,6 +351,11 @@ body {
     color: #64748b;
 }
 
+.badge-primary {
+    background: rgba(30, 58, 95, 0.15);
+    color: var(--primary);
+}
+
 .table {
     width: 100%;
     margin-bottom: 0;
@@ -614,4 +619,47 @@ a {
 
 a:hover {
     color: var(--primary-light);
+}
+
+.stat-subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.stat-normal { border-left-color: var(--success); }
+.stat-normal .stat-value { color: var(--success); }
+
+.stat-surplus { border-left-color: var(--warning); }
+.stat-surplus .stat-value { color: var(--warning); }
+
+.stat-loss { border-left-color: var(--danger); }
+.stat-loss .stat-value { color: var(--danger); }
+
+.border-danger {
+    border-color: var(--danger) !important;
+}
+
+.border-warning {
+    border-color: var(--warning) !important;
+}
+
+.bg-danger {
+    background-color: var(--danger) !important;
+}
+
+.bg-warning {
+    background-color: var(--warning) !important;
+}
+
+.table-danger {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.table-warning {
+    background-color: rgba(245, 158, 11, 0.05) !important;
+}
+
+.table-success {
+    background-color: rgba(16, 185, 129, 0.05) !important;
 }

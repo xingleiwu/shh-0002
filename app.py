@@ -32,16 +32,20 @@ def create_app():
     from routes.assets import assets_bp
     from routes.borrow import borrow_bp
     from routes.scrap import scrap_bp
+    from routes.inventory import inventory_bp
     from routes.department import department_bp
     from routes.user import user_bp
+    from routes.logs import logs_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(assets_bp)
     app.register_blueprint(borrow_bp)
     app.register_blueprint(scrap_bp)
+    app.register_blueprint(inventory_bp)
     app.register_blueprint(department_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(logs_bp)
 
     from flask_wtf.csrf import generate_csrf
 

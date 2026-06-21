@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from models import ScrapRecord, Asset, db
 from forms import ScrapForm
+from utils import log_operation
 from datetime import datetime
 
 scrap_bp = Blueprint('scrap', __name__)
@@ -48,6 +49,13 @@ def new():
 
         db.session.add(record)
         db.session.commit()
+        log_operation(
+            operation_type='scrap_create',
+            target_id=record.id,
+            target_type='scrap',
+            target_name=asset.name,
+            content=f'报废登记：{asset.name}，原因：{form.reason.data}'
+        )
         flash('资产报废登记成功！', 'success')
         return redirect(url_for('scrap.list'))
 

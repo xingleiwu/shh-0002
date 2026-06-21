@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}创建盘点单 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📋 创建盘点单{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                {{ form.title.label(class="form-label") }}
+                {% if form.title.errors %}
+                {{ form.title(class="form-control is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.title.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ form.title(class="form-control") }}
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.department_id.label(class="form-label") }}
+                        {% if form.department_id.errors %}
+                        {{ form.department_id(class="form-select is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.department_id.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        {{ form.department_id(class="form-select") }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.start_date.label(class="form-label") }}
+                        {% if form.start_date.errors %}
+                        {{ form.start_date(class="form-control is-invalid", type="date") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.start_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        {{ form.start_date(class="form-control", type="date") }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                {{ form.remark.label(class="form-label") }}
+                {% if form.remark.errors %}
+                {{ form.remark(class="form-control is-invalid", rows=3) }}
+                <div class="invalid-feedback">
+                    {% for error in form.remark.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ form.remark(class="form-control", rows=3) }}
+                {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('inventory.list') }}" class="btn btn-outline-secondary">取消</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

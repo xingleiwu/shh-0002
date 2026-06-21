@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ check.title }} - 资产盘点{% endblock %}
+
+{% block page_title %}📋 {{ check.title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">总资产数</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-normal">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.normal }}</div>
+                <div class="stat-label">正常</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-surplus">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.surplus }}</div>
+                <div class="stat-label">盘盈</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-loss">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.loss }}</div>
+                <div class="stat-label">盘亏</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>状态：</strong>
+                {% if check.status == 'draft' %}
+                <span class="badge bg-secondary">{{ inventory_status.get(check.status) }}</span>
+                {% elif check.status == 'ongoing' %}
+                <span class="badge bg-primary">{{ inventory_status.get(check.status) }}</span>
+                {% elif check.status == 'completed' %}
+                <span class="badge bg-success">{{ inventory_status.get(check.status) }}</span>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <strong>盘点部门：</strong>{{ check.department.name if check.department else '全部部门' }}
+            </div>
+            <div class="col-md-3">
+                <strong>开始日期：</strong>{{ check.start_date.strftime('%Y-%m-%d') }}
+            </div>
+            <div class="col-md-3">
+                <strong>操作人：</strong>{{ check.operator.real_name if check.operator else '-' }}
+            </div>
+        </div>
+        {% if check.remark %}
+        <div class="mt-2">
+            <strong>备注：</strong>{{ check.remark }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="flex-grow-1">
+        <strong>盘点明细</strong>
+        {% if stats.unchecked > 0 and check.status == 'ongoing' %}
+        <span class="text-muted ms-2">（还有 {{ stats.unchecked }} 项未盘点）</span>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        {% if check.status == 'draft' %}
+        <form method="POST" action="{{ url_for('inventory.start', check_id=check.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary">▶ 开始盘点</button>
+        </form>
+        {% endif %}
+        {% if check.status == 'ongoing' %}
+        <form method="POST" action="{{ url_for('inventory.complete', check_id=check.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success">✓ 完成盘点</button>
+        </form>
+        {% endif %}
+        {% if check.status == 'completed' %}
+        <a href="{{ url_for('inventory.report', check_id=check.id) }}" class="btn btn-success">📊 查看报告</a>
+        {% endif %}
+        {% if check.status != 'completed' %}
+        <form method="POST" action="{{ url_for('inventory.delete', check_id=check.id) }}" onsubmit="return confirm('确定要删除这个盘点单吗？')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger">删除</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('inventory.list') }}" class="btn btn-outline-secondary">返回列表</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if check.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>资产名称</th>
+                        <th>分类</th>
+                        <th>使用部门</th>
+                        <th>责任人</th>
+                        <th>系统状态</th>
+                        <th>实际状态</th>
+                        <th>盘点结果</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in check.items %}
+                    <tr class="{% if item.result == 'loss' %}table-danger{% elif item.result == 'surplus' %}table-warning{% elif item.result == 'normal' %}table-success{% endif %}">
+                        <td>{{ item.asset.id if item.asset else '-' }}</td>
+                        <td>{{ item.asset.name if item.asset else '<span class="text-muted">已删除</span>'|safe }}</td>
+                        <td>{{ item.asset.category.name if item.asset and item.asset.category else '-' }}</td>
+                        <td>{{ item.asset.department.name if item.asset and item.asset.department else '-' }}</td>
+                        <td>{{ item.asset.responsible_person if item.asset else '-' }}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ asset_status.get(item.expected_status, item.expected_status) }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if item.actual_status %}
+                            <span class="badge {% if item.actual_status == 'exists' %}bg-success{% elif item.actual_status == 'missing' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ inventory_actual_status.get(item.actual_status, item.actual_status) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">未盘点</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.result %}
+                            <span class="badge {% if item.result == 'normal' %}bg-success{% elif item.result == 'surplus' %}bg-warning text-dark{% elif item.result == 'loss' %}bg-danger{% endif %}">
+                                {{ inventory_result.get(item.result, item.result) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if check.status != 'completed' %}
+                            <a href="{{ url_for('inventory.edit_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                {% if item.actual_status %}修改{% else %}录入{% endif %}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">已完成</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>暂无盘点明细</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import BorrowRecord, Asset, db
 from forms import BorrowApplyForm, BorrowRejectForm
+from utils import log_operation
 from datetime import datetime
 
 borrow_bp = Blueprint('borrow', __name__)
@@ -103,6 +104,13 @@ def apply(asset_id):
         )
         db.session.add(record)
         db.session.commit()
+        log_operation(
+            operation_type='borrow_apply',
+            target_id=record.id,
+            target_type='borrow',
+            target_name=asset.name,
+            content=f'申请领用资产：{asset.name}'
+        )
         flash('领用申请已提交，请等待审批！', 'success')
         return redirect(url_for('borrow.list'))
 
@@ -135,6 +143,13 @@ def approve(id):
     record.approver_id = current_user.id
     record.approve_date = datetime.now()
     db.session.commit()
+    log_operation(
+        operation_type='borrow_approve',
+        target_id=record.id,
+        target_type='borrow',
+        target_name=record.asset.name,
+        content=f'审批通过领用申请：{record.asset.name}（申请人：{record.applicant.real_name}）'
+    )
     flash('申请已通过，待员工确认领用！', 'success')
     return redirect(url_for('borrow.list'))
 
@@ -158,6 +173,13 @@ def reject(id):
         record.approve_date = datetime.now()
         record.reject_reason = form.reject_reason.data
         db.session.commit()
+        log_operation(
+            operation_type='borrow_reject',
+            target_id=record.id,
+            target_type='borrow',
+            target_name=record.asset.name,
+            content=f'驳回领用申请：{record.asset.name}（申请人：{record.applicant.real_name}），原因：{form.reject_reason.data}'
+        )
         flash('申请已驳回！', 'info')
         return redirect(url_for('borrow.list'))
 
@@ -180,6 +202,13 @@ def receive(id):
     record.receive_date = datetime.now()
     record.asset.status = 'in_use'
     db.session.commit()
+    log_operation(
+        operation_type='borrow_receive',
+        target_id=record.id,
+        target_type='borrow',
+        target_name=record.asset.name,
+        content=f'确认领用资产：{record.asset.name}'
+    )
     flash('已确认领用，请妥善保管资产！', 'success')
     return redirect(url_for('borrow.list'))
 
@@ -199,6 +228,13 @@ def return_asset(id):
     record.status = 'returned'
     record.return_request_date = datetime.now()
     db.session.commit()
+    log_operation(
+        operation_type='borrow_return',
+        target_id=record.id,
+        target_type='borrow',
+        target_name=record.asset.name,
+        content=f'申请归还资产：{record.asset.name}'
+    )
     flash('归还申请已提交，请等待管理员确认收讫！', 'info')
     return redirect(url_for('borrow.list'))
 
@@ -219,5 +255,12 @@ def confirm_return(id):
     record.return_confirm_date = datetime.now()
     record.asset.status = 'idle'
     db.session.commit()
+    log_operation(
+        operation_type='borrow_confirm_return',
+        target_id=record.id,
+        target_type='borrow',
+        target_name=record.asset.name,
+        content=f'确认资产已归还：{record.asset.name}（使用人：{record.applicant.real_name}）'
+    )
     flash('资产已收讫，申领记录已完成！', 'success')
     return redirect(url_for('borrow.list'))

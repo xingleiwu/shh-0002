@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}操作日志 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📝 操作日志{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <form method="GET" class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="form-group">
+            <label>操作类型</label>
+            <select name="operation_type" class="form-select">
+                <option value="">全部</option>
+                {% for key, value in operation_types.items() %}
+                <option value="{{ key }}" {% if operation_type == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>操作人</label>
+            <select name="operator_id" class="form-select">
+                <option value="">全部</option>
+                {% for op in operators %}
+                <option value="{{ op.id }}" {% if operator_id == op.id %}selected{% endif %}>{{ op.real_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>开始日期</label>
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        <div class="form-group">
+            <label>结束日期</label>
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">查询</button>
+                <button type="reset" class="btn btn-secondary btn-filter-reset">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>操作人</th>
+                        <th>操作类型</th>
+                        <th>操作对象</th>
+                        <th>操作内容</th>
+                        <th>操作时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.operator.real_name if log.operator else '-' }}</td>
+                        <td>
+                            <span class="badge {{ get_badge_class(log.operation_type) }}">
+                                {{ get_operation_type_text(log.operation_type) }}
+                            </span>
+                        </td>
+                        <td>{{ log.target_name or '-' }}</td>
+                        <td>{{ log.content or '-' }}</td>
+                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>暂无操作日志</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}资产盘点 - 企业资产管理系统{% endblock %}
+
+{% block page_title %}📋 资产盘点{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div class="flex-grow-1"></div>
+    <a href="{{ url_for('inventory.new') }}" class="btn btn-primary">
+        ➕ 创建盘点单
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if checks %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>盘点名称</th>
+                        <th>盘点部门</th>
+                        <th>状态</th>
+                        <th>资产数量</th>
+                        <th>开始日期</th>
+                        <th>操作人</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for check in checks %}
+                    <tr>
+                        <td>{{ check.id }}</td>
+                        <td>{{ check.title }}</td>
+                        <td>{{ check.department.name if check.department else '全部部门' }}</td>
+                        <td>
+                            {% if check.status == 'draft' %}
+                            <span class="badge bg-secondary">{{ inventory_status.get(check.status) }}</span>
+                            {% elif check.status == 'ongoing' %}
+                            <span class="badge bg-primary">{{ inventory_status.get(check.status) }}</span>
+                            {% elif check.status == 'completed' %}
+                            <span class="badge bg-success">{{ inventory_status.get(check.status) }}</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">{{ inventory_status.get(check.status, check.status) }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ check.items|length }}</td>
+                        <td>{{ check.start_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ check.operator.real_name if check.operator else '-' }}</td>
+                        <td>{{ check.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('inventory.detail', check_id=check.id) }}" class="btn btn-outline-primary">查看</a>
+                                {% if check.status == 'completed' %}
+                                <a href="{{ url_for('inventory.report', check_id=check.id) }}" class="btn btn-outline-success">报告</a>
+                                {% endif %}
+                                {% if check.status != 'completed' %}
+                                <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ check.id }})">删除</button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>暂无盘点单</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function confirmDelete(id) {
+    if (confirm('确定要删除这个盘点单吗？')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/inventory/' + id + '/delete';
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

@@ -93,3 +93,28 @@ class UserForm(FlaskForm):
         self.department_id.choices = [(0, '无')] + [
             (d.id, d.name) for d in Department.query.order_by(Department.name).all()
         ]
+
+
+class InventoryForm(FlaskForm):
+    title = StringField('盘点名称', validators=[DataRequired(), Length(1, 100)])
+    department_id = SelectField('盘点部门', coerce=int, validators=[Optional()])
+    start_date = DateField('盘点开始日期', validators=[DataRequired()])
+    remark = TextAreaField('备注说明', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('创建盘点单')
+
+    def __init__(self, *args, **kwargs):
+        super(InventoryForm, self).__init__(*args, **kwargs)
+        self.department_id.choices = [(0, '全部部门')] + [
+            (d.id, d.name) for d in Department.query.order_by(Department.name).all()
+        ]
+
+
+class InventoryItemForm(FlaskForm):
+    actual_status = SelectField('实际状态', choices=[
+        ('exists', '存在'),
+        ('missing', '缺失'),
+        ('damaged', '损坏')
+    ], validators=[DataRequired()])
+    actual_location = StringField('实际位置', validators=[Optional(), Length(max=100)])
+    remark = StringField('备注', validators=[Optional(), Length(max=255)])
+    submit = SubmitField('保存')

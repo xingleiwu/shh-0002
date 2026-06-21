@@ -31,8 +31,14 @@
                 <span class="menu-icon">🏢</span>部门资产
             </a></li>
             {% if current_user.is_admin() %}
+            <li><a href="{{ url_for('inventory.list') }}" class="{% if request.endpoint and request.endpoint.startswith('inventory.') %}active{% endif %}">
+                <span class="menu-icon">📋</span>资产盘点
+            </a></li>
             <li><a href="{{ url_for('user.list') }}" class="{% if request.endpoint and request.endpoint.startswith('user.') %}active{% endif %}">
                 <span class="menu-icon">👥</span>用户管理
+            </a></li>
+            <li><a href="{{ url_for('logs.list') }}" class="{% if request.endpoint and request.endpoint.startswith('logs.') %}active{% endif %}">
+                <span class="menu-icon">📝</span>操作日志
             </a></li>
             {% endif %}
         </ul>

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import Asset, BorrowRecord, db
 from forms import AssetForm
+from utils import log_operation
 from datetime import datetime
 
 assets_bp = Blueprint('assets', __name__)
@@ -84,6 +85,13 @@ def new():
         )
         db.session.add(asset)
         db.session.commit()
+        log_operation(
+            operation_type='asset_create',
+            target_id=asset.id,
+            target_type='asset',
+            target_name=asset.name,
+            content=f'新增资产：{asset.name}，价格：¥{asset.purchase_price:.2f}'
+        )
         flash('资产录入成功！', 'success')
         return redirect(url_for('assets.list'))
 
@@ -100,6 +108,7 @@ def edit(id):
     form = AssetForm(obj=asset)
 
     if form.validate_on_submit():
+        old_name = asset.name
         asset.name = form.name.data
         asset.category_id = form.category_id.data
         asset.purchase_price = form.purchase_price.data
@@ -108,6 +117,13 @@ def edit(id):
         asset.responsible_person = form.responsible_person.data
         asset.status = form.status.data
         db.session.commit()
+        log_operation(
+            operation_type='asset_update',
+            target_id=asset.id,
+            target_type='asset',
+            target_name=asset.name,
+            content=f'修改资产信息：{old_name}'
+        )
         flash('资产信息更新成功！', 'success')
         return redirect(url_for('assets.list'))
 
@@ -135,8 +151,16 @@ def delete(id):
         flash('该资产存在报废记录，无法删除！', 'danger')
         return redirect(url_for('assets.list'))
 
+    asset_name = asset.name
     db.session.delete(asset)
     db.session.commit()
+    log_operation(
+        operation_type='asset_delete',
+        target_id=id,
+        target_type='asset',
+        target_name=asset_name,
+        content=f'删除资产：{asset_name}'
+    )
     flash('资产删除成功！', 'success')
     return redirect(url_for('assets.list'))
 

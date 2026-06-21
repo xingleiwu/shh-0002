@@ -31,3 +31,41 @@ class Config:
         'dept_admin': '部门管理员',
         'employee': '普通员工'
     }
+
+    INVENTORY_STATUS = {
+        'draft': '草稿',
+        'ongoing': '进行中',
+        'completed': '已完成'
+    }
+
+    INVENTORY_RESULT = {
+        'normal': '正常',
+        'surplus': '盘盈',
+        'loss': '盘亏'
+    }
+
+    INVENTORY_ACTUAL_STATUS = {
+        'exists': '存在',
+        'missing': '缺失',
+        'damaged': '损坏'
+    }
+
+    OPERATION_TYPES = {
+        'asset_create': '新增资产',
+        'asset_update': '修改资产',
+        'asset_delete': '删除资产',
+        'borrow_apply': '领用申请',
+        'borrow_approve': '审批通过',
+        'borrow_reject': '审批驳回',
+        'borrow_receive': '资产领用',
+        'borrow_return': '归还申请',
+        'borrow_confirm_return': '归还确认',
+        'scrap_create': '报废登记',
+        'inventory_create': '创建盘点',
+        'inventory_start': '开始盘点',
+        'inventory_complete': '完成盘点',
+        'inventory_delete': '删除盘点',
+        'user_create': '新增用户',
+        'user_update': '修改用户',
+        'user_delete': '删除用户'
+    }

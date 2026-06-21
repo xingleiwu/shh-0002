@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ check.title }} - 盘点报告{% endblock %}
+
+{% block page_title %}📊 {{ check.title }} - 盘点报告{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3"><strong>盘点状态：</strong><span class="badge bg-success">已完成</span></div>
+            <div class="col-md-3"><strong>盘点部门：</strong>{{ check.department.name if check.department else '全部部门' }}</div>
+            <div class="col-md-3"><strong>开始日期：</strong>{{ check.start_date.strftime('%Y-%m-%d') }}</div>
+            <div class="col-md-3"><strong>结束日期：</strong>{{ check.end_date.strftime('%Y-%m-%d') if check.end_date else '-' }}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-3"><strong>操作人：</strong>{{ check.operator.real_name if check.operator else '-' }}</div>
+            <div class="col-md-9"><strong>备注：</strong>{{ check.remark or '无' }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">总资产数（项）</div>
+                <div class="stat-subtitle">¥{{ "%.2f"|format(total_value) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-normal">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.normal }}</div>
+                <div class="stat-label">正常（项）</div>
+                <div class="stat-subtitle">¥{{ "%.2f"|format(normal_value) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-surplus">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.surplus }}</div>
+                <div class="stat-label">盘盈（项）</div>
+                <div class="stat-subtitle">¥{{ "%.2f"|format(surplus_value) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-loss">
+            <div class="card-body">
+                <div class="stat-value">{{ stats.loss }}</div>
+                <div class="stat-label">盘亏（项）</div>
+                <div class="stat-subtitle">¥{{ "%.2f"|format(loss_value) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <strong>📈 按分类统计</strong>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>资产分类</th>
+                        <th>总数</th>
+                        <th>正常</th>
+                        <th>盘盈</th>
+                        <th>盘亏</th>
+                        <th>盘点准确率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat_name, cat_stats in by_category.items() %}
+                    <tr>
+                        <td>{{ cat_name }}</td>
+                        <td>{{ cat_stats.total }}</td>
+                        <td><span class="text-success">{{ cat_stats.normal }}</span></td>
+                        <td><span class="text-warning">{{ cat_stats.surplus }}</span></td>
+                        <td><span class="text-danger">{{ cat_stats.loss }}</span></td>
+                        <td>
+                            {% if cat_stats.total > 0 %}
+                            {{ "%.1f"|format(cat_stats.normal / cat_stats.total * 100) }}%
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if loss_items %}
+<div class="card mb-3 border-danger">
+    <div class="card-header bg-danger text-white">
+        <strong>⚠️ 盘亏资产清单（{{ loss_items|length }} 项）</strong>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>资产ID</th>
+                        <th>资产名称</th>
+                        <th>分类</th>
+                        <th>使用部门</th>
+                        <th>责任人</th>
+                        <th>系统状态</th>
+                        <th>购入价格</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in loss_items %}
+                    <tr>
+                        <td>{{ item.asset.id if item.asset else '-' }}</td>
+                        <td>{{ item.asset.name if item.asset else '-' }}</td>
+                        <td>{{ item.asset.category.name if item.asset and item.asset.category else '-' }}</td>
+                        <td>{{ item.asset.department.name if item.asset and item.asset.department else '-' }}</td>
+                        <td>{{ item.asset.responsible_person if item.asset else '-' }}</td>
+                        <td>{{ asset_status.get(item.expected_status, item.expected_status) }}</td>
+                        <td>{% if item.asset %}¥{{ "%.2f"|format(item.asset.purchase_price) }}{% else %}-{% endif %}</td>
+                        <td style="max-width: 200px;">{{ item.remark or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if surplus_items %}
+<div class="card mb-3 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <strong>📦 盘盈资产清单（{{ surplus_items|length }} 项）</strong>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>资产ID</th>
+                        <th>资产名称</th>
+                        <th>分类</th>
+                        <th>使用部门</th>
+                        <th>责任人</th>
+                        <th>系统状态</th>
+                        <th>购入价格</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in surplus_items %}
+                    <tr>
+                        <td>{{ item.asset.id if item.asset else '-' }}</td>
+                        <td>{{ item.asset.name if item.asset else '-' }}</td>
+                        <td>{{ item.asset.category.name if item.asset and item.asset.category else '-' }}</td>
+                        <td>{{ item.asset.department.name if item.asset and item.asset.department else '-' }}</td>
+                        <td>{{ item.asset.responsible_person if item.asset else '-' }}</td>
+                        <td>{{ asset_status.get(item.expected_status, item.expected_status) }}</td>
+                        <td>{% if item.asset %}¥{{ "%.2f"|format(item.asset.purchase_price) }}{% else %}-{% endif %}</td>
+                        <td style="max-width: 200px;">{{ item.remark or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-end gap-2">
+    <a href="{{ url_for('inventory.detail', check_id=check.id) }}" class="btn btn-outline-secondary">返回详情</a>
+    <a href="{{ url_for('inventory.list') }}" class="btn btn-outline-primary">返回列表</a>
+</div>
+{% endblock %}

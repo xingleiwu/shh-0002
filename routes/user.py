@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import User, db
 from forms import UserForm
+from utils import log_operation
 
 user_bp = Blueprint('user', __name__)
 
@@ -83,6 +84,13 @@ def new():
 
         db.session.add(user)
         db.session.commit()
+        log_operation(
+            operation_type='user_create',
+            target_id=user.id,
+            target_type='user',
+            target_name=user.real_name,
+            content=f'新增用户：{user.real_name}（用户名：{user.username}，角色：{user.role}）'
+        )
         flash('用户创建成功！', 'success')
         return redirect(url_for('user.list'))
 
@@ -114,6 +122,13 @@ def edit(id):
             user.set_password(form.password.data)
 
         db.session.commit()
+        log_operation(
+            operation_type='user_update',
+            target_id=user.id,
+            target_type='user',
+            target_name=user.real_name,
+            content=f'修改用户信息：{user.real_name}（用户名：{user.username}）'
+        )
         flash('用户信息更新成功！', 'success')
         return redirect(url_for('user.list'))
 
@@ -138,7 +153,15 @@ def delete(id):
         flash('该用户存在相关记录，无法删除！', 'danger')
         return redirect(url_for('user.list'))
 
+    user_name = user.real_name
     db.session.delete(user)
     db.session.commit()
+    log_operation(
+        operation_type='user_delete',
+        target_id=id,
+        target_type='user',
+        target_name=user_name,
+        content=f'删除用户：{user_name}'
+    )
     flash('用户删除成功！', 'success')
     return redirect(url_for('user.list'))
